@@ -11,8 +11,8 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
-    setLoading(true); // Set loading state
+    setError("");
+    setLoading(true);
 
     const clearUrl = sourceUrl.replace(/^(https?:\/\/)/, "");
     if (!clearUrl) {
@@ -40,13 +40,13 @@ export default function Home() {
       console.error("Error shortening URL:", error);
       setError("Failed to shorten URL. Please try again.");
     } finally {
-      setLoading(false); // Clear loading state
+      setLoading(false);
     }
   };
 
   const handleAnalytics = async () => {
-    setError(""); // Clear previous errors
-    setLoading(true); // Set loading state
+    setError("");
+    setLoading(true);
 
     if (!url) {
       setError("Please shorten a URL first to view analytics.");
@@ -65,7 +65,7 @@ export default function Home() {
         "Failed to fetch analytics. Make sure the shortened URL is valid.",
       );
     } finally {
-      setLoading(false); // Clear loading state
+      setLoading(false);
     }
   };
 
