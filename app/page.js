@@ -1,113 +1,213 @@
-import Image from 'next/image'
+"use client";
+import { useState } from "react";
+import axios from "axios";
 
 export default function Home() {
+  const [url, setUrlId] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [clicks, setClicks] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(""); // Clear previous errors
+    setLoading(true); // Set loading state
+
+    const clearUrl = sourceUrl.replace(/^(https?:\/\/)/, "");
+    if (!clearUrl) {
+      setError("Please enter a URL.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "https://url-shortner-api-pi.vercel.app/url",
+        {
+          url: "http://" + clearUrl,
+        },
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Credentials": "true",
+          },
+        },
+      );
+      setUrlId(response.data.id);
+    } catch (error) {
+      console.error("Error shortening URL:", error);
+      setError("Failed to shorten URL. Please try again.");
+    } finally {
+      setLoading(false); // Clear loading state
+    }
+  };
+
+  const handleAnalytics = async () => {
+    setError(""); // Clear previous errors
+    setLoading(true); // Set loading state
+
+    if (!url) {
+      setError("Please shorten a URL first to view analytics.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `https://url-shortner-api-pi.vercel.app/url/analytics/${url}`,
+      );
+      setClicks(response.data.totalClicks);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      setError(
+        "Failed to fetch analytics. Make sure the shortened URL is valid.",
+      );
+    } finally {
+      setLoading(false); // Clear loading state
+    }
+  };
+
+  const handleCopy = () => {
+    const shortenedUrl = `https://url-shortner-api-pi.vercel.app/${url}`;
+    navigator.clipboard
+      .writeText(shortenedUrl)
+      .then(() => {
+        alert("Shortened URL copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy: ", err);
+        alert("Failed to copy URL.");
+      });
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-950 to-gray-800 text-gray-100 p-4 sm:p-6 font-sans">
+      <h1 className="text-4xl sm:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 drop-shadow-lg text-center">
+        URL Shortener
+      </h1>
+      <p className="text-lg sm:text-xl mb-8 text-gray-300 text-center max-w-xl">
+        Transform your long URLs into concise, shareable links.
+      </p>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-lg flex flex-col sm:flex-row items-stretch rounded-xl overflow-hidden shadow-2xl bg-gray-800 border border-gray-700 transition-all duration-300 hover:shadow-purple-500/30"
+      >
+        <span className="bg-indigo-600 text-white py-3 px-4 sm:px-6 flex items-center justify-center text-base sm:text-lg font-medium">
+          https://
+        </span>
+        <input
+          value={sourceUrl}
+          onChange={(e) => setSourceUrl(e.target.value)}
+          type="text"
+          name="url"
+          id="url"
+          placeholder="Paste a long URL here"
+          className="py-3 px-4 sm:px-5 flex-1 bg-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base sm:text-lg transition-all duration-200"
+          aria-label="Enter long URL"
         />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="submit"
+          className="bg-purple-700 hover:bg-purple-600 text-white py-3 px-6 sm:px-8 font-semibold text-base sm:text-lg rounded-b-xl sm:rounded-l-none sm:rounded-r-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
+          disabled={loading}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+          {loading ? (
+            <svg
+              className="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          ) : (
+            "Shorten"
+          )}
+        </button>
+      </form>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+      {error && (
+        <div className="mt-6 text-red-400 bg-red-900/30 border border-red-700 rounded-lg p-3 text-center max-w-md w-full animate-fade-in-down">
+          {error}
+        </div>
+      )}
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
+      {url && (
+        <div className="mt-8 bg-gray-800 rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-gray-700 text-center animate-fade-in-up">
+          <p className="text-lg sm:text-xl font-medium text-gray-300 mb-3">
+            Your shortened URL:
           </p>
-        </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              href={`https://url-shortner-api-pi.vercel.app/${url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 break-all text-base sm:text-lg font-mono underline hover:no-underline transition-colors duration-200 p-2 bg-gray-700 rounded-lg flex-grow"
+              aria-label={`Go to shortened URL: https://url-shortner-api-pi.vercel.app/${url}`}
+            >
+              https://url-shortner-api-pi.vercel.app/{url}
+            </a>
+            <button
+              onClick={handleCopy}
+              className="bg-sky-700 hover:bg-sky-600 text-white py-2 px-4 sm:px-5 rounded-lg text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all duration-200 shadow-md"
+            >
+              Copy
+            </button>
+          </div>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+          <section className="mt-6 flex flex-col items-center">
+            <button
+              onClick={handleAnalytics}
+              className="bg-purple-600 hover:bg-purple-500 text-white py-2 px-6 rounded-lg text-base sm:text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md mb-4"
+              disabled={loading}
+            >
+              {loading ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                "View Analytics"
+              )}
+            </button>
+            {clicks !== null && (
+              <p className="text-xl sm:text-2xl font-bold text-teal-400 bg-gray-700 rounded-full py-2 px-5 shadow-inner animate-fade-in">
+                Total Clicks: <span className="text-white">{clicks}</span>
+              </p>
+            )}
+          </section>
+        </div>
+      )}
+    </div>
+  );
 }
