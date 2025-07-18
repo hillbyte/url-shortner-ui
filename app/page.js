@@ -23,7 +23,7 @@ export default function Home() {
 
     try {
       const response = await axios.post(
-        "https://url-shortner-api-pi.vercel.app/url",
+        `${process.env.NEXT_PUBLIC_API_URL}/url`,
         {
           url: "http://" + clearUrl,
         },
@@ -56,7 +56,7 @@ export default function Home() {
 
     try {
       const response = await axios.get(
-        `https://url-shortner-api-pi.vercel.app/url/analytics/${url}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/url/analytics/${url}`,
       );
       setClicks(response.data.totalClicks);
     } catch (error) {
@@ -70,7 +70,7 @@ export default function Home() {
   };
 
   const handleCopy = () => {
-    const shortenedUrl = `https://url-shortner-api-pi.vercel.app/${url}`;
+    const shortenedUrl = `${process.env.NEXT_PUBLIC_API_URL}/${url}`;
     navigator.clipboard
       .writeText(shortenedUrl)
       .then(() => {
@@ -153,13 +153,13 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
-              href={`https://url-shortner-api-pi.vercel.app/${url}`}
+              href={`${process.env.NEXT_PUBLIC_API_URL}/${url}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-emerald-400 hover:text-emerald-300 break-all text-base sm:text-lg font-mono underline hover:no-underline transition-colors duration-200 p-2 bg-gray-700 rounded-lg flex-grow"
-              aria-label={`Go to shortened URL: https://url-shortner-api-pi.vercel.app/${url}`}
+              aria-label={`Go to shortened URL: ${process.env.NEXT_PUBLIC_API_URL}/${url}`}
             >
-              https://url-shortner-api-pi.vercel.app/{url}
+              {process.env.NEXT_PUBLIC_API_URL}/{url}
             </a>
             <button
               onClick={handleCopy}
